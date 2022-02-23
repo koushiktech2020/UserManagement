@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { Form, Button, Container, Row, Col } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Alert,
+  Modal,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 const UserForm = () => {
@@ -9,129 +16,155 @@ const UserForm = () => {
   const [dob, setDob] = useState("");
   const [role, setRole] = useState("");
   const [biodata, setBiodata] = useState("");
-  //const [photo, setPhoto] = useForm();
-  const { register, handleSubmit } = useForm();
+  const [filename, setFilename] = useState("");
+  const [showSuccessAlert, setSuccessShowAlert] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const uploadHandler = async (data) => {
-    let navigate = useNavigate();
-    //console.log("role is----->", role);
+  let navigate = useNavigate();
+
+  const onChangeFile = (e) => {
+    setFilename(e.target.files[0]);
+  };
+
+  const uploadHandler = async (e) => {
+    e.preventDefault();
+
     const formData = new FormData();
-    formData.append("picture", data.picture[0]);
-    console.log("formdata file---->", formData);
 
-    let item = {
-      name: name,
-      email: email,
-      dob: dob,
-      role: role,
-      biodata: biodata,
-      photo: formData,
-    };
-    console.log("item is---->", item);
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("dob", dob);
+    formData.append("role", role);
+    formData.append("biodata", biodata);
+    formData.append("photo", filename);
+
+    //console.log("upload info is-->", formData);
+
     let result = await fetch("http://localhost:4200/api/users", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(item),
+      body: formData,
     });
-    result = await result.json();
-    //result.json is come from back end and store in result variable
-    //console.log("result is---->", result);
-    if (result) {
-      navigate("UserForm");
+
+    let resultData = await result.json();
+    //console.log("result is---->", resultData.status + resultData.message);
+    if (resultData.status == "true") {
+      setSuccessShowAlert(true);
+      setMessage(resultData.message);
+    } else {
+      alert(resultData.message);
     }
   };
 
   return (
-    <Container fluid>
-      <Row>
-        <Col></Col>
-        <Col lg="6" style={{ marginTop: "50px" }}>
-          <Form onSubmit={handleSubmit(uploadHandler)}>
-            <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                }}
-              />
-              <Form.Label>Email address</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
-              />
+    <>
+      <Container fluid>
+        <Row>
+          <Col></Col>
+          <Col lg="6" style={{ marginTop: "50px" }}>
+            <div className="container text-center mb-5">
+              <h1>Add new User</h1>
+            </div>
+            <Form onSubmit={uploadHandler} encType="multipart/form-data">
+              <Form.Group className="mb-3" controlId="formBasicEmail">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                  }}
+                />
+                <Form.Label>Email address</Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                  }}
+                />
 
-              <Form.Label>Date of birth</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="dd/mm/yyyy"
-                value={dob}
-                onChange={(e) => {
-                  setDob(e.target.value);
-                }}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Role </Form.Label>
-              <Form.Select
-                onChange={(e) => {
-                  setRole(e.target.value);
-                }}
-              >
-                <option value="Admin">Admin</option>
-                <option value="User">User</option>
-                <option value="Manager">Manager</option>
-                <option value="Auditor">Auditor</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="formBasicPassword">
-              <Form.Label>Biodata </Form.Label>
-              <textarea
-                className="form-control"
-                id="exampleFormControlTextarea1"
-                rows="5"
-                value={biodata}
-                onChange={(e) => {
-                  setBiodata(e.target.value);
-                }}
-              />
-            </Form.Group>
-
-            <Form.Group style={{ marginBottom: "30px" }}>
-              <Form.Label>Photo</Form.Label>
-              <Form.Group as={Row}>
-                <input
-                  style={{ marginTop: "20px" }}
-                  type="file"
-                  name="picture"
-                  {...register("picture", { required: true })}
+                <Form.Label>Date of birth</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="dd/mm/yyyy"
+                  value={dob}
+                  onChange={(e) => {
+                    setDob(e.target.value);
+                  }}
                 />
               </Form.Group>
-            </Form.Group>
 
-            <Button
-              variant="primary"
-              type="submit"
-              style={{ marginBottom: "30px" }}
-            >
-              Submit
-            </Button>
-          </Form>
-        </Col>
-        <Col></Col>
-      </Row>
-    </Container>
+              <Form.Group className="mb-3">
+                <Form.Label>Role </Form.Label>
+                <Form.Select
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                  }}
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="User">User</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Auditor">Auditor</option>
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Label>Biodata </Form.Label>
+                <textarea
+                  className="form-control"
+                  id="exampleFormControlTextarea1"
+                  rows="5"
+                  value={biodata}
+                  onChange={(e) => {
+                    setBiodata(e.target.value);
+                  }}
+                />
+              </Form.Group>
+
+              <Form.Group className="me-2 ms-2 mb-4">
+                <Form.Label>Photo</Form.Label>
+                <Form.Group as={Row}>
+                  <input
+                    type="file"
+                    className="form-control"
+                    filename="photo"
+                    onChange={onChangeFile}
+                  />
+                </Form.Group>
+              </Form.Group>
+
+              <Button
+                variant="primary"
+                type="submit"
+                style={{ marginBottom: "30px" }}
+              >
+                Submit
+              </Button>
+            </Form>
+          </Col>
+          <Col></Col>
+        </Row>
+        {showSuccessAlert == true ? (
+          <Modal
+            size="sm"
+            show={showSuccessAlert}
+            onHide={() => {
+              setSuccessShowAlert(false);
+              navigate("/");
+            }}
+          >
+            <Modal.Header closeButton></Modal.Header>
+            <Modal.Body>
+              <Alert variant="success">
+                <Alert.Heading>{message}</Alert.Heading>
+              </Alert>
+            </Modal.Body>
+          </Modal>
+        ) : null}
+      </Container>
+    </>
   );
 };
 

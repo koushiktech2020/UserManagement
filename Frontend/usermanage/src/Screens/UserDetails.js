@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Container, Row, Col } from "react-bootstrap";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Table,
+  Button,
+  Container,
+  Row,
+  Col,
+  Modal,
+  Form,
+} from "react-bootstrap";
 
 import axios from "axios";
-import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 
 const UserDetails = () => {
@@ -12,66 +19,83 @@ const UserDetails = () => {
   const [dob, setDob] = useState("");
   const [role, setRole] = useState("");
   const [biodata, setBiodata] = useState("");
-  //const [photo, setPhoto] = useForm();
-  const { register, handleSubmit } = useForm();
+  const [filename, setFilename] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [link, setLink] = useState("");
 
   useEffect(() => {
     getUserDetails();
   }, []);
 
-  const url = "http://localhost:4200/api/users";
+  const url = "http://localhost:4200/api/users"; //Base url
 
+  /*----- get all user details ----*/
   const getUserDetails = async () => {
     const response = await axios(url);
     //console.log(response.data.userlist);
     setData(response.data.userlist);
   };
 
-  const updateHandler = async (data) => {
-    //console.log("role is----->", role);
-    const formData = new FormData();
-    formData.append("picture", data.picture[0]);
-    //console.log("formdata file---->", formData);
-
-    let item = {
-      name: name,
-      email: email,
-      dob: dob,
-      role: role,
-      biodata: biodata,
-      photo: formData,
-    };
-    //console.log("item is---->", item);
-
-    let userId = id;
-    //console.log(noteId);
-    let url = `http://localhost:4200/api/users${userId}`;
-    let resultData = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(item),
-    });
-    const responseMessage = await resultData.json();
-    //console.log(responseMessage.message);
-    alert(responseMessage.message);
-    //result.json is come from back end and store in result variable
-    console.log("result is---->", result);
+  const editModalHandler = async (val) => {
+    setOpenModal(true);
+    //console.log("modal value----->", val._id);
+    setLink(url + "/" + val._id);
+    setName(val.name);
+    setEmail(val.email);
+    setDob(val.dob);
+    setRole(val.role);
+    setBiodata(val.biodata);
   };
 
+  const onChangeFile = (e) => {
+    setFilename(e.target.files[0]);
+  };
+
+  const updateUserDetails = async (e) => {
+    e.preventDefault();
+
+    //console.log("link---->", link);
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("dob", dob);
+    formData.append("role", role);
+    formData.append("biodata", biodata);
+    formData.append("photo", filename);
+
+    let result = await fetch(link, {
+      method: "PUT",
+      body: formData,
+    });
+
+    let resultData = await result.json();
+    //console.log("result is---->", resultData.status + resultData.message);
+    if (resultData.status == "true") {
+      setOpenModal(false);
+      getUserDetails();
+    } else {
+      alert(resultData.message);
+    }
+  };
+
+  /*---- delete particular user details -----*/
   const deleteHandler = async (val) => {
-    //console.log(val._id);
+    //console.log("id is---->", val._id);
     let Id = val._id;
-    let url = `http://localhost:4200/api/users${Id}`;
-    //console.log(url);
-    let responseData = await fetch(url, {
+    let url = `http://localhost:4200/api/users/${Id}`;
+    //console.log("url is---->", url);
+    let result = await fetch(url, {
       method: "DELETE",
     });
-    const responseMessage = await responseData.json();
+    const responseData = await result.json();
     //console.log(responseMessage.message);
-    alert(responseMessage.message);
+    if (responseData.status == "true") {
+      alert(responseData.message);
+      getUserDetails();
+    } else {
+      alert(responseData.message);
+    }
   };
 
   return (
@@ -80,134 +104,106 @@ const UserDetails = () => {
         <Row>
           <Col></Col>
           <Col lg="6" style={{ marginTop: "50px" }}>
-            {/* <!-- Modal --> */}
-            <div
-              className="modal fade"
-              id="exampleModal"
-              tabindex="-1"
-              aria-labelledby="exampleModalLabel"
-              aria-hidden="true"
-            >
-              <div className="modal-dialog">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title" id="exampleModalLabel">
-                      Edit User Details
-                    </h5>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div className="modal-body">
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                      <Form.Label>Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Enter name"
-                        value={name}
-                        onChange={(e) => {
-                          setName(e.target.value);
-                        }}
-                      />
-                      <Form.Label>Email address</Form.Label>
-                      <Form.Control
-                        type="email"
-                        placeholder="Enter email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                        }}
-                      />
-
-                      <Form.Label>Date of birth</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="dd/mm/yyyy"
-                        value={dob}
-                        onChange={(e) => {
-                          setDob(e.target.value);
-                        }}
-                      />
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                      <Form.Label>Role </Form.Label>
-                      <Form.Select
-                        onChange={(e) => {
-                          setRole(e.target.value);
-                        }}
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="User">User</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Auditor">Auditor</option>
-                      </Form.Select>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3" controlId="formBasicPassword">
-                      <Form.Label>Biodata </Form.Label>
-                      <textarea
-                        className="form-control"
-                        id="exampleFormControlTextarea1"
-                        rows="5"
-                        value={biodata}
-                        onChange={(e) => {
-                          setBiodata(e.target.value);
-                        }}
-                      />
-                    </Form.Group>
-
-                    <Form.Group style={{ marginBottom: "30px" }}>
-                      <Form.Label>Photo</Form.Label>
-                      <Form.Group as={Row}>
-                        <input
-                          style={{ marginTop: "20px" }}
-                          type="file"
-                          name="picture"
-                          {...register("picture", { required: true })}
-                        />
-                      </Form.Group>
-                    </Form.Group>
-
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      style={{ marginBottom: "30px" }}
-                    >
-                      Submit
-                    </Button>
-                  </div>
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={updateHandler}
-                    >
-                      Update Note
-                    </button>
-                    <button
-                      ref={refClose}
-                      type="button"
-                      className="btn btn-secondary"
-                      data-bs-dismiss="modal"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: "50px",
+            <Modal
+              show={openModal}
+              onHide={() => {
+                setOpenModal(false);
               }}
             >
+              <Modal.Header closeButton></Modal.Header>
+              <Modal.Body>
+                <div className="container text-center mb-5">
+                  <h2>Edit User Details</h2>
+                </div>
+                <Form
+                  encType="multipart/form-data"
+                  onSubmit={updateUserDetails}
+                >
+                  <Form.Group className="mb-3" controlId="formBasicEmail">
+                    <Form.Label>Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter name"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                      }}
+                    />
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      placeholder="Enter email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                      }}
+                    />
+
+                    <Form.Label>Date of birth</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="dd/mm/yyyy"
+                      value={dob}
+                      onChange={(e) => {
+                        setDob(e.target.value);
+                      }}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Role </Form.Label>
+                    <Form.Select
+                      onChange={(e) => {
+                        setRole(e.target.value);
+                      }}
+                    >
+                      <option value="Admin">Admin</option>
+                      <option value="User">User</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Auditor">Auditor</option>
+                    </Form.Select>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3" controlId="formBasicPassword">
+                    <Form.Label>Biodata </Form.Label>
+                    <textarea
+                      className="form-control"
+                      id="exampleFormControlTextarea1"
+                      rows="5"
+                      value={biodata}
+                      onChange={(e) => {
+                        setBiodata(e.target.value);
+                      }}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="me-2 ms-2 mb-4">
+                    <Form.Label>Photo</Form.Label>
+                    <Form.Group as={Row}>
+                      <input
+                        type="file"
+                        className="form-control"
+                        filename="photo"
+                        onChange={onChangeFile}
+                      />
+                    </Form.Group>
+                  </Form.Group>
+
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    style={{ marginBottom: "30px" }}
+                  >
+                    Submit
+                  </Button>
+                </Form>
+              </Modal.Body>
+            </Modal>
+            <div className="container text-center">
+              <h1>User Management System</h1>
+            </div>
+
+            <div className="mb-2 d-flex justify-content-end mt-5">
               <Link to="UserForm" className="btn btn-primary">
                 Add New
               </Link>
@@ -243,7 +239,7 @@ const UserDetails = () => {
                         <button
                           className="btn btn-primary"
                           onClick={() => {
-                            editmodalHanddler(item);
+                            editModalHandler(item);
                           }}
                         >
                           Edit
