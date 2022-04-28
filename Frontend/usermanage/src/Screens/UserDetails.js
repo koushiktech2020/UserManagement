@@ -22,33 +22,43 @@ const UserDetails = () => {
   const [filename, setFilename] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [link, setLink] = useState("");
+  const [imgUrl, setImgUrl] = useState("");
+  const [img, setImg] = useState(null);
+  const [fileShow, setFileShow] = useState(false);
 
   useEffect(() => {
     getUserDetails();
   }, []);
 
-  const url = "http://localhost:4200/api/users"; //Base url
+  const apiUrl = "http://localhost:5000/api/users"; //Base url
 
   /*----- get all user details ----*/
   const getUserDetails = async () => {
-    const response = await axios(url);
-    //console.log(response.data.userlist);
-    setData(response.data.userlist);
+    const response = await fetch(apiUrl);
+    const resultdata = await response.json();
+    console.log("data----->", resultdata);
+    setData(resultdata.data);
+    setImgUrl(resultdata.url);
   };
 
+  /*----- edit modal for edit signle user details --------*/
   const editModalHandler = async (val) => {
     setOpenModal(true);
-    //console.log("modal value----->", val._id);
-    setLink(url + "/" + val._id);
+    console.log("modal value----->", val);
+    setLink(apiUrl + "/" + val._id);
     setName(val.name);
     setEmail(val.email);
     setDob(val.dob);
     setRole(val.role);
     setBiodata(val.biodata);
+    setImg(val.photo);
   };
 
   const onChangeFile = (e) => {
     setFilename(e.target.files[0]);
+    const objectUrl = URL.createObjectURL(e.target.files[0]);
+    setImg(objectUrl);
+    setFileShow(true);
   };
 
   const updateUserDetails = async (e) => {
@@ -83,7 +93,7 @@ const UserDetails = () => {
   const deleteHandler = async (val) => {
     //console.log("id is---->", val._id);
     let Id = val._id;
-    let url = `http://localhost:4200/api/users/${Id}`;
+    let url = `http://localhost:5000/api/users/${Id}`;
     //console.log("url is---->", url);
     let result = await fetch(url, {
       method: "DELETE",
@@ -180,12 +190,31 @@ const UserDetails = () => {
                   <Form.Group className="me-2 ms-2 mb-4">
                     <Form.Label>Photo</Form.Label>
                     <Form.Group as={Row}>
-                      <input
-                        type="file"
-                        className="form-control"
-                        filename="photo"
-                        onChange={onChangeFile}
-                      />
+                      <div className="col-2">
+                        {fileShow == true ? (
+                          <img
+                            src={img}
+                            alt="pictures"
+                            className="img-thumbnail rounded"
+                            style={{ height: "40px" }}
+                          />
+                        ) : (
+                          <img
+                            src={imgUrl + img}
+                            alt="pictures"
+                            className="img-thumbnail rounded"
+                            style={{ height: "40px" }}
+                          />
+                        )}
+                      </div>
+                      <div className="col-10">
+                        <input
+                          type="file"
+                          className="form-control"
+                          filename="photo"
+                          onChange={onChangeFile}
+                        />
+                      </div>
                     </Form.Group>
                   </Form.Group>
 
@@ -226,7 +255,7 @@ const UserDetails = () => {
                     <tr>
                       <td>
                         <img
-                          src={item.photo}
+                          src={imgUrl + item.photo}
                           alt="pictures"
                           className="img-thumbnail rounded"
                         />

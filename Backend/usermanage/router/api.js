@@ -1,5 +1,6 @@
-const express = require("express"); //loading mongoose module for MongoDB Connection
+const express = require("express");
 
+//loading mongoose module for MongoDB Connection
 const mongoose = require("mongoose");
 
 const router = express.Router();
@@ -8,11 +9,11 @@ const router = express.Router();
 const UserModel = require("../model/UserModel");
 
 //Testing Database connection for localhost
-//const db = "mongodb://localhost:27017/foodDB";
+const db = "mongodb://localhost:27017/foodDB";
 
 //Testing Database connection for cloudclever
-const db =
-  "mongodb://uixdaznktlpcscsnhxgr:HO4MSt14eSzuGmSe20Hg@b29zv75kznnqjb0-mongodb.services.clever-cloud.com:27017/b29zv75kznnqjb0";
+// const db =
+//   "mongodb://uixdaznktlpcscsnhxgr:HO4MSt14eSzuGmSe20Hg@b29zv75kznnqjb0-mongodb.services.clever-cloud.com:27017/b29zv75kznnqjb0";
 
 //loading multer module
 const multer = require("multer");
@@ -38,22 +39,46 @@ mongoose.connect(db, (err) => {
 router.get("/users", (req, res) => {
   // res.send("All foods from database");
   UserModel.find({}).exec((err, data) => {
-    if (err) res.status(200).json({ message: err });
-    else res.status(200).json({ userlist: data });
+    if (err)
+      res.status(200).json({
+        status: "false",
+        message: err,
+      });
+    else
+      res.status(200).json({
+        status: "true",
+        data: data,
+        url: "http://localhost:5000/images/",
+      });
   });
 });
 
 //adding new food details
 router.post("/users", upload.single("photo"), (req, res) => {
+  //console.log("req data----->", req.file);
   //accepting incoming data
   const name = req.body.name;
   const email = req.body.email;
   const dob = req.body.dob;
   const role = req.body.role;
   const biodata = req.body.biodata;
+  const photo = req.file.filename;
 
-  const photo = "http://localhost:4200/images/" + req.file.filename;
-  //console.log("pic-----", photo);
+  // const data = {
+  //   name: name,
+  //   email: email,
+  //   dob: dob,
+  //   role: role,
+  //   biodata: biodata,
+  //   photo: photo,
+  // };
+
+  // res.status(201).json({
+  //   status: "true",
+  //   message: "Data found !",
+  //   data: data,
+  //   url: "http://localhost:5000/images/",
+  // });
 
   //Creating instance of foodList Model
   const newUser = new UserModel();
@@ -76,6 +101,7 @@ router.post("/users", upload.single("photo"), (req, res) => {
         message: "One User Added Successfully !",
         data: data,
         status: "true",
+        url: "http://localhost:5000/images/",
       });
     }
   });
@@ -87,7 +113,7 @@ router.put("/users/:id", upload.single("photo"), (req, res) => {
   //   "req body is---->" +
   // );
   if (req.file) {
-    const photo = "http://localhost:4200/images/" + req.file.filename;
+    const photo = req.file.filename;
     UserModel.findByIdAndUpdate(
       req.params.id,
       {
@@ -103,11 +129,14 @@ router.put("/users/:id", upload.single("photo"), (req, res) => {
       { new: true },
       (err, data) => {
         if (err)
-          res.status(200).json({ message: "Cannot update", status: "false" });
+          res.status(200).json({ status: "false", message: "Cannot update" });
         else
-          res
-            .status(202)
-            .json({ message: "Updated", data: data, status: "true" });
+          res.status(202).json({
+            status: "true",
+            message: "Updated",
+            data: data,
+            url: "http://localhost:5000/images/",
+          });
       }
     );
   } else {
@@ -125,11 +154,14 @@ router.put("/users/:id", upload.single("photo"), (req, res) => {
       { new: true },
       (err, data) => {
         if (err)
-          res.status(200).json({ message: "Cannot update", status: "false" });
+          res.status(200).json({ status: "false", message: "Cannot update" });
         else
-          res
-            .status(202)
-            .json({ message: "Updated", data: data, status: "true" });
+          res.status(202).json({
+            status: "true",
+            message: "Updated",
+            data: data,
+            url: "http://localhost:5000/images/",
+          });
       }
     );
   }
@@ -139,9 +171,9 @@ router.put("/users/:id", upload.single("photo"), (req, res) => {
 router.delete("/users/:id", (req, res) => {
   UserModel.findByIdAndDelete(req.params.id).exec((err, data) => {
     if (err)
-      res.status(200).json({ message: "could not delete", status: "false" });
+      res.status(200).json({ status: "false", message: "could not delete" });
     else
-      res.status(202).json({ message: "Successfully Deleted", status: "true" });
+      res.status(202).json({ status: "true", message: "Successfully Deleted" });
   });
 });
 

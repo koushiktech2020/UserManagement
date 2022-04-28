@@ -8,7 +8,7 @@ const cors = require("cors");
 
 const path = require("path");
 
-const port = process.env.PORT || 4200;
+const port = process.env.PORT || 5000;
 
 const api = require("./router/api");
 

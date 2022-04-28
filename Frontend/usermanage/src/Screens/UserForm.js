@@ -31,28 +31,45 @@ const UserForm = () => {
 
     const formData = new FormData();
 
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("dob", dob);
-    formData.append("role", role);
-    formData.append("biodata", biodata);
-    formData.append("photo", filename);
+    let formValues = {
+      name: name,
+      email: email,
+      dob: dob,
+      role: role,
+      biodata: biodata,
+      photo: filename,
+    };
 
-    //console.log("upload info is-->", formData);
+    let objArray = Object.keys(formValues);
 
-    let result = await fetch("http://localhost:4200/api/users", {
+    objArray.forEach((element) => {
+      //console.log("element is----->", element)
+      //console.log("object_get[element]", formValues[element])
+      formData.append(element, formValues[element]);
+    });
+
+    // formData.append("name", name);
+    // formData.append("email", email);
+    // formData.append("dob", dob);
+    // formData.append("role", role);
+    // formData.append("biodata", biodata);
+    // formData.append("photo", filename);
+
+    console.log("upload info is-->", formData);
+
+    let result = await fetch("http://localhost:5000/api/users", {
       method: "POST",
       body: formData,
     });
 
     let resultData = await result.json();
-    //console.log("result is---->", resultData.status + resultData.message);
-    if (resultData.status == "true") {
-      setSuccessShowAlert(true);
-      setMessage(resultData.message);
-    } else {
-      alert(resultData.message);
-    }
+    console.log("result is---->", resultData);
+    // if (resultData.status == "true") {
+    //   setSuccessShowAlert(true);
+    //   setMessage(resultData.message);
+    // } else {
+    //   alert(resultData.message);
+    // }
   };
 
   return (
