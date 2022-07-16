@@ -55,30 +55,12 @@ router.get("/users", (req, res) => {
 
 //adding new food details
 router.post("/users", upload.single("photo"), (req, res) => {
-  //console.log("req data----->", req.file);
-  //accepting incoming data
   const name = req.body.name;
   const email = req.body.email;
   const dob = req.body.dob;
   const role = req.body.role;
   const biodata = req.body.biodata;
   const photo = req.file.filename;
-
-  // const data = {
-  //   name: name,
-  //   email: email,
-  //   dob: dob,
-  //   role: role,
-  //   biodata: biodata,
-  //   photo: photo,
-  // };
-
-  // res.status(201).json({
-  //   status: "true",
-  //   message: "Data found !",
-  //   data: data,
-  //   url: "http://localhost:5000/images/",
-  // });
 
   //Creating instance of foodList Model
   const newUser = new UserModel();
@@ -109,9 +91,6 @@ router.post("/users", upload.single("photo"), (req, res) => {
 
 //Put Request
 router.put("/users/:id", upload.single("photo"), (req, res) => {
-  // console.log(
-  //   "req body is---->" +
-  // );
   if (req.file) {
     const photo = req.file.filename;
     UserModel.findByIdAndUpdate(
